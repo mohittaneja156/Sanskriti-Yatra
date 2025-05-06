@@ -1,44 +1,70 @@
-# Import python packages
 import streamlit as st
-from snowflake.snowpark.context import get_active_session
+import pandas as pd
 
-# Write directly to the app
-st.title(f"Example Streamlit App :balloon: {st.__version__}")
-st.write(
-  """Replace this example with your own code!
-  **And if you're new to Streamlit,** check
-  out our easy-to-follow guides at
-  [docs.streamlit.io](https://docs.streamlit.io).
-  """
-)
+# Sample data for attractions
+data = {
+    "Attraction": [
+        "Chand Baori", "Hawa Mahal", "The Root Bridges", "Skeletons of Roopkund Lake", 
+        "Jal Mahal", "The Blue City of Jodhpur", "Ellora Caves", "Mahabat Maqbara"
+    ],
+    "Location": [
+        "Abhaneri", "Jaipur", "Cherrapunjee", "Chamoli", 
+        "Jaipur", "Jodhpur", "Verul", "Junagadh"
+    ],
+    "Description": [
+        "Thousands of exquisitely carved stone water storage wells...",
+        "The 953 windows undoubtedly make this the world’s most beautiful screened porch...",
+        "Centuries-old bridges grown from tangled roots.",
+        "A lake with hundreds of ancient skeletons surrounding it...",
+        "More than half of this Indian palace is drowned...",
+        "Once an indicator of social class...",
+        "This complex of vertically-excavated Buddhist, Jain...",
+        "This otherworldly palace-mausoleum complex..."
+    ],
+    "lat": [
+        27.1469, 26.9934, 25.2986, 30.2217,
+        26.2625, 26.2939, 20.0207, 21.5289
+    ],
+    "lon": [
+        77.4200, 75.8267, 91.5822, 80.2006,
+        75.8503, 73.1477, 75.2270, 70.9632
+    ]
+}
 
-# Get the current credentials
-session = get_active_session()
+# Create a DataFrame
+df = pd.DataFrame(data)
 
-# Use an interactive slider to get user input
-hifives_val = st.slider(
-  "Number of high-fives in Q3",
-  min_value=0,
-  max_value=90,
-  value=60,
-  help="Use this to enter the number of high-fives you gave in Q3",
-)
+# Streamlit app title
+st.title("Explore India")
 
-#  Create an example dataframe
-#  Note: this is just some dummy data, but you can easily connect to your Snowflake data
-#  It is also possible to query data using raw SQL using session.sql() e.g. session.sql("select * from table")
-created_dataframe = session.create_dataframe(
-  [[50, 25, "Q1"], [20, 35, "Q2"], [hifives_val, 30, "Q3"]],
-  schema=["HIGH_FIVES", "FIST_BUMPS", "QUARTER"],
-)
+# Display map
+st.subheader("Map of Attractions")
+st.map(df[['lat', 'lon']])
 
-# Execute the query and convert it into a Pandas dataframe
-queried_data = created_dataframe.to_pandas()
+# Display categories as buttons
+st.subheader("Categories")
+categories = {
+    "Architecture": 100,
+    "History & Culture": 71,
+    "Temples": 56,
+    "Sacred Spaces": 37,
+    "Religion": 35,
+    "History": 31,
+    "Hinduism": 30,
+    "Ruins": 27,
+    "Forts": 23,
+    "Architectural Oddities": 22,
+    "Museums": 21,
+    "Unique Restaurants & Bars": 4,
+}
+for category, count in categories.items():
+    st.button(f"{category} ({count})")
 
-# Create a simple bar chart
-# See docs.streamlit.io for more types of charts
-st.subheader("Number of high-fives")
-st.bar_chart(data=queried_data, x="QUARTER", y="HIGH_FIVES")
-
-st.subheader("Underlying data")
-st.dataframe(queried_data, use_container_width=True)
+# Display unusual attractions in a grid
+st.subheader("Unusual Attractions in India")
+cols = st.columns(4)
+for idx, row in df.iterrows():
+    with cols[idx % 4]:
+        st.subheader(row['Attraction'])
+        st.caption(row['Description'])
+        st.text(f"Location: {row['Location']}")
